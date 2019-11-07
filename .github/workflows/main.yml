@@ -121,6 +121,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [tag-release-on-master, build]
     steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
     - name: Parse version
       run: export NEW_VERSION=$(node -p "require('./package.json').version")
     - name: Test
