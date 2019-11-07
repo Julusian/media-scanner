@@ -38,3 +38,23 @@ jobs:
       with:
         name: scanner-linux
         path: dist/scanner
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: yarn install
+      run: yarn install
+#     - name: yarn test
+#       run: |
+#         yarn lint || true # TODO - temporary disable
+#         yarn test
+    - name: yarn build
+      run: yarn build-win32
+    - uses: actions/upload-artifact@master
+      with:
+        name: scanner-windows.exe
+        path: dist/scanner.exe
