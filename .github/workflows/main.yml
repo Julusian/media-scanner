@@ -58,8 +58,29 @@ jobs:
   #       yarn install
   #       yarn test
 
+  tag-release-on-master:
+    runs-on: ubuntu-latest
+    needs: [validate-dependencies] # TODO + test
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - name: yarn release
+      # if: github.ref == 'refs/heads/master' # TODO - uncomment this
+      run: |
+        git checkout "${GITHUB_REF:11}" # TODO - verify this is safe
+        git remote set-url origin https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
+        git config --global user.email "info@superfly.tv"
+        git config --global user.name "superflytvab"
+        yarn install
+        yarn release
+        git push --follow-tags origin HEAD
+
   build:
     runs-on: ${{ matrix.os }}
+    needs: [tag-release-on-master]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -96,22 +117,42 @@ jobs:
         name: ${{ runner.OS }}
         path: dist
 
-  tag-release:
+  create-release:
     runs-on: ubuntu-latest
-    # if: github.ref == 'refs/heads/master' # TODO - uncomment this
-    needs: [validate-dependencies, build] # TODO + test
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        node-version: '12.x'
-    - name: yarn release
-      run: |
-        git checkout "${GITHUB_REF:11}" # TODO - verify this is safe
-        git remote set-url origin https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
-        git config --global user.email "info@superfly.tv"
-        git config --global user.name "superflytvab"
-        yarn install
-        yarn release
-        git push --follow-tags origin HEAD
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: 'false'
+        prerelease: 'false'
+
+    - uses: actions/download-artifact@master
+      with:
+        name: linux
+    - uses: actions/download-artifact@master
+      with:
+        name: Windows
+
+    - name: Upload Linux
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./linux.zip
+        asset_name: scanner-${{ github.ref }}-linux.zip
+        asset_content_type: application/zip
+    - name: Upload Windows
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./Windows.zip
+        asset_name: scanner-${{ github.ref }}-windows.zip
+        asset_content_type: application/zip
