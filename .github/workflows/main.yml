@@ -61,8 +61,8 @@ jobs:
 #         yarn lint || true # TODO - temporary disable
 #         yarn test
     - name: yarn build
-      run: yarn build-${{ runner.OS }}
+      run: yarn build-ci-${{ runner.OS }}
     - uses: actions/upload-artifact@master
       with:
         name: ${{ runner.OS }}
-        path: dist/*
+        path: dist
