@@ -11,21 +11,33 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
+    - name: Cache node modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-audit-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-audit-
+          ${{ runner.OS }}-
     - name: yarn validate:dependencies
       run: |
         yarn install
         yarn validate:dependencies
   build-linux:
     runs-on: ubuntu-latest
-#     strategy:
-#       matrix:
-#         node-version: [8.x, 10.x, 12.x]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js 12.x
       uses: actions/setup-node@v1
       with:
         node-version: 12.x
+    - name: Cache node modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-
     - name: yarn install
       run: yarn install
 #     - name: yarn test
@@ -36,7 +48,7 @@ jobs:
       run: yarn build-linux
     - uses: actions/upload-artifact@master
       with:
-        name: scanner-linux
+        name: linux
         path: dist/scanner
   build-windows:
     runs-on: windows-latest
@@ -46,6 +58,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 12.x
+    - name: Cache node modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-
     - name: yarn install
       run: yarn install
 #     - name: yarn test
@@ -56,5 +75,5 @@ jobs:
       run: yarn build-win32
     - uses: actions/upload-artifact@master
       with:
-        name: scanner-windows.exe
+        name: windows
         path: dist/scanner.exe
