@@ -1,6 +1,6 @@
 {
   "name": "scanner",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "",
   "license": "LGPL-3.0",
   "main": "src/index.js",
