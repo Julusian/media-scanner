@@ -23,8 +23,11 @@ jobs:
       run: |
         yarn install
         yarn validate:dependencies
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js 12.x
@@ -38,6 +41,8 @@ jobs:
         key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.OS }}-
+    - name: tmp
+      run: echo ${{ toJson(runner) }}
     - name: yarn install
       run: yarn install
 #     - name: yarn test
@@ -48,32 +53,5 @@ jobs:
       run: yarn build-linux
     - uses: actions/upload-artifact@master
       with:
-        name: linux
-        path: dist/scanner
-  build-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: 12.x
-    - name: Cache node modules
-      uses: actions/cache@v1
-      with:
-        path: node_modules
-        key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.OS }}-
-    - name: yarn install
-      run: yarn install
-#     - name: yarn test
-#       run: |
-#         yarn lint || true # TODO - temporary disable
-#         yarn test
-    - name: yarn build
-      run: yarn build-win32
-    - uses: actions/upload-artifact@master
-      with:
-        name: windows
-        path: dist/scanner.exe
+        name: ${{ matrix.os }}
+        path: dist/*
