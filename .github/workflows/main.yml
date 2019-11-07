@@ -121,39 +121,46 @@ jobs:
     runs-on: ubuntu-latest
     needs: [tag-release-on-master, build]
     steps:
-    - name: Create Release
-      id: create-release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: 'false'
-        prerelease: 'false'
+    - name: Parse version
+      run: export NEW_VERSION=$(node -p "require('./package.json').version")
+    - name: Test
+      run: |
+        env
+        echo "$NEW_VERSION"
 
-    - uses: actions/download-artifact@master
-      with:
-        name: linux
+    # - name: Create Release
+    #   id: create-release
+    #   uses: actions/create-release@v1.0.0
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.ref }}
+    #     release_name: Release ${{ github.ref }}
+    #     draft: 'false'
+    #     prerelease: 'false'
+
     # - uses: actions/download-artifact@master
     #   with:
-    #     name: Windows
+    #     name: linux
+    # # - uses: actions/download-artifact@master
+    # #   with:
+    # #     name: Windows
 
-    - name: Upload Linux
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./linux.zip
-        asset_name: scanner-${{ github.ref }}-linux.zip
-        asset_content_type: application/zip
-    # - name: Upload Windows
+    # - name: Upload Linux
     #   uses: actions/upload-release-asset@v1.0.1
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     #   with:
     #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-    #     asset_path: ./Windows.zip
-    #     asset_name: scanner-${{ github.ref }}-windows.zip
+    #     asset_path: ./linux.zip
+    #     asset_name: scanner-${{ github.ref }}-linux.zip
     #     asset_content_type: application/zip
+    # # - name: Upload Windows
+    # #   uses: actions/upload-release-asset@v1.0.1
+    # #   env:
+    # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # #   with:
+    # #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    # #     asset_path: ./Windows.zip
+    # #     asset_name: scanner-${{ github.ref }}-windows.zip
+    # #     asset_content_type: application/zip
