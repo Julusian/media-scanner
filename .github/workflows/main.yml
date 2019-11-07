@@ -52,8 +52,8 @@ jobs:
         key: ${{ runner.OS }}-${{ hashFiles('**\yarn.lock') }}
         restore-keys: |
           ${{ runner.OS }}-
-    - name: tmp
-      run: echo ${{ toJson(runner) }}
+#     - name: tmp
+#       run: echo ${{ toJson(runner) }}
     - name: yarn install
       run: yarn install
 #     - name: yarn test
