@@ -1,4 +1,4 @@
-name: Build
+name: Build Dev
 
 on: [push]
 
@@ -23,8 +23,44 @@ jobs:
       run: |
         yarn install
         yarn validate:dependencies
+
+  # test:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, windows-latest]
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - name: Use Node.js 12.x
+  #     uses: actions/setup-node@v1
+  #     with:
+  #       node-version: '12.x'
+  #   - name: Cache node modules
+  #     uses: actions/cache@v1
+  #     # TMP HACK https://github.com/actions/cache/issues/39
+  #     if: runner.os != 'Windows'
+  #     with:
+  #       path: node_modules
+  #       key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
+  #       restore-keys: |
+  #         ${{ runner.OS }}-
+  #   - name: Cache node modules
+  #     uses: actions/cache@v1
+  #     # TMP HACK https://github.com/actions/cache/issues/39
+  #     if: runner.os == 'Windows'
+  #     with:
+  #       path: node_modules
+  #       key: ${{ runner.OS }}-${{ hashFiles('**\yarn.lock') }}
+  #       restore-keys: |
+  #         ${{ runner.OS }}-
+  #   - name: yarn test
+  #     run: |
+  #       yarn install
+  #       yarn test
+
   build:
     runs-on: ${{ matrix.os }}
+    needs: [release-on-master]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -52,17 +88,50 @@ jobs:
         key: ${{ runner.OS }}-${{ hashFiles('**\yarn.lock') }}
         restore-keys: |
           ${{ runner.OS }}-
-#     - name: tmp
-#       run: echo ${{ toJson(runner) }}
-    - name: yarn install
-      run: yarn install
-#     - name: yarn test
-#       run: |
-#         yarn lint || true # TODO - temporary disable
-#         yarn test
     - name: yarn build
-      run: yarn build-ci-${{ runner.OS }}
+      run: |
+        yarn install
+        yarn build-ci-${{ runner.OS }}
     - uses: actions/upload-artifact@master
       with:
         name: ${{ runner.OS }}
         path: dist
+
+    - name: Create Release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: 'false'
+        prerelease: 'false'
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./my-artifact.zip
+        asset_name: my-artifact.zip
+        asset_content_type: application/zip
+
+  tag-release:
+    runs-on: ubuntu-latest
+    # if: github.ref == 'refs/heads/master' # TODO - uncomment this
+    needs: [validate-dependencies, build] # TODO + test
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - name: yarn release
+      run: |
+        git checkout "${GITHUB_REF:11}" # TODO - verify this is safe
+        git remote set-url origin https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
+        git config --global user.email "info@superfly.tv"
+        git config --global user.name "superflytvab"
+        yarn install
+        yarn release
+        git push --follow-tags origin HEAD
