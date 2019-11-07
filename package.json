@@ -10,6 +10,8 @@
     "test": "jest",
     "build-linux": "mkdir -p dist && nexe src.index.js -o dist/scanner -t linux-x64",
     "build-win32": "mkdir -p dist && nexe src.index.js -o dist/scanner.exe -t windows-x64",
+    "build-Linux": "yarn build-linux",
+    "build-Windows": "yarn build-win32",
     "validate:dependencies": "yarn audit && yarn license-validate",
     "license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause ISC Apache Apache-2.0 \"Apache 2.0\" WTFPL LGPL-3.0 Unlicense --allow-packages base62"
   },
