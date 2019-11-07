@@ -38,7 +38,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: node_modules
-        key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ runner.OS }}-${{ hashFiles('yarn.lock') }}
         restore-keys: |
           ${{ runner.OS }}-
     - name: tmp
@@ -50,8 +50,8 @@ jobs:
 #         yarn lint || true # TODO - temporary disable
 #         yarn test
     - name: yarn build
-      run: yarn build-linux
+      run: yarn build-${{ runner.OS }}
     - uses: actions/upload-artifact@master
       with:
-        name: ${{ matrix.os }}
+        name: ${{ runner.OS }}
         path: dist/*
