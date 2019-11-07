@@ -36,9 +36,20 @@ jobs:
         node-version: 12.x
     - name: Cache node modules
       uses: actions/cache@v1
+      # TMP HACK https://github.com/actions/cache/issues/39
+      if: runner.os != 'Windows'
       with:
         path: node_modules
-        key: ${{ runner.OS }}-${{ hashFiles('yarn.lock') }}
+        key: ${{ runner.OS }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-
+    - name: Cache node modules
+      uses: actions/cache@v1
+      # TMP HACK https://github.com/actions/cache/issues/39
+      if: runner.os == 'Windows'
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-${{ hashFiles('**\yarn.lock') }}
         restore-keys: |
           ${{ runner.OS }}-
     - name: tmp
